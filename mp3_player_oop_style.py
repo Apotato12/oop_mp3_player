@@ -15,6 +15,7 @@ class MP3PlayerCore:
         self.playlist = []
         self.current_index = 0
         self.music_directory = os.path.expanduser('~/Music')
+
     def load_songs(self, directory):
         """Load all supported audio files from directory"""
         self.music_directory = directory
@@ -30,6 +31,7 @@ class MP3PlayerCore:
             self.current_song = self.playlist[self.current_index]
             return True
         return False
+
     def play_pause(self):
         """Toggle between play and pause"""
         if not self.current_song and self.playlist:
