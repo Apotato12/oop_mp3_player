@@ -55,3 +55,11 @@ class StatusDisplay(tk.Frame):
         self.time_label = tk.Label(self, text="00:00 / 00:00")
         self.time_label.pack(fill=tk.X)
 
+class FolderButton(tk.Frame):
+    def __init__(self, master, player, **kwargs):
+        super().__init__(master, **kwargs)
+        self.player = player
+        
+        self.load_btn = tk.Button(self, text="Load Music Folder",
+                                command=self.player.load_songs_dialog)
+        self.load_btn.pack(fill=tk.X, pady=5)
