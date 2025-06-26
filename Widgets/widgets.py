@@ -39,3 +39,19 @@ class PlaylistDisplay(tk.Frame):
         
         self.scrollbar.config(command=self.listbox.yview)
 
+class StatusDisplay(tk.Frame):
+    def __init__(self, master, player, **kwargs):
+        super().__init__(master, **kwargs)
+        self.player = player
+        
+        self.song_label = tk.Label(self, text="No song selected",
+                                  font=('Helvetica', 10, 'bold'))
+        self.song_label.pack(fill=tk.X, pady=5)
+
+        self.progress = tk.Scale(self, from_=0, to=100, orient=tk.HORIZONTAL,
+                               showvalue=0, state=tk.DISABLED)
+        self.progress.pack(fill=tk.X)
+
+        self.time_label = tk.Label(self, text="00:00 / 00:00")
+        self.time_label.pack(fill=tk.X)
+
