@@ -24,5 +24,18 @@ class PlayerControls(tk.Frame):
         self.volume_scale.set(70)
         self.volume_scale.grid(row=0, column=4, padx=5)
 
-
+class PlaylistDisplay(tk.Frame):
+    def __init__(self, master, player, **kwargs):
+        super().__init__(master, **kwargs)
+        self.player = player
+        
+        self.scrollbar = tk.Scrollbar(self)
+        self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        self.listbox = tk.Listbox(self, yscrollcommand=self.scrollbar.set,
+        selectbackground='lightblue', selectmode=tk.SINGLE)
+        self.listbox.pack(fill=tk.BOTH, expand=True)
+        self.listbox.bind('<Double-1>', lambda e: self.player.play_selected())
+        
+        self.scrollbar.config(command=self.listbox.yview)
 
