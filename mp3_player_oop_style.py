@@ -2,16 +2,32 @@ import tkinter as tk
 import pygame
 import os
 from tkinter import *
+from pygame import mixer
 
-class mp3_player_launcher:
+
+class MP3PlayerCore:
     def __init__(self):
-        self.root = tk.TK()
-        self.root.title("MP3 Player Launcher")
-        self.root.geometry("300x200")
-        self.create_widgets()
-        self.root.mainloop()
+        pygame.init()
+        mixer.init()
+        self.playing = False
+        self.paused = False
+        self.current_song = None
+        self.playlist = []
+        self.current_index = 0
+        self.music_directory = os.path.expanduser('~/Music')
 
-class widget:
-    def __init__(self, master):
-        self.master = master
-        self.label = tk.Label(master, text = "mp3 player launcher")
+    def load_songs(self, directory):
+        """Load all supported audio files from directory"""
+        self.music_directory = directory
+        self.playlist = []
+        os.chdir(directory)
+        
+        for file in os.listdir(directory):
+            if file.lower().endswith(('.mp3', '.wav', '.ogg', '.flac')):
+                self.playlist.append(file)
+        
+        if self.playlist:
+            self.current_index = 0
+            self.current_song = self.playlist[self.current_index]
+            return True
+        return False
