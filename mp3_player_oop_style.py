@@ -3,7 +3,6 @@ import os
 from tkinter import *
 from tkinter import filedialog
 from pygame import mixer
-import threading
 
 class MP3PlayerCore:
     def __init__(self):

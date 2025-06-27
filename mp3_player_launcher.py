@@ -20,6 +20,8 @@ class MP3PlayerApp:
             
         print("Loaded songs:", self.player.playlist)
         
+        self.user_interacting_with_progress = False  # Flag to track user interaction with the progress bar
+        
     def create_widgets(self):
         self.main_frame = tk.Frame(self.root)
         self.main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
@@ -33,7 +35,7 @@ class MP3PlayerApp:
         self.folder_btn.pack(fill=tk.X, pady=5)
         self.now_playing_label = tk.Label(self.main_frame, text="Now Playing: ")
         self.now_playing_label.pack(fill=tk.X, pady=5)
-        self.progress_bar = tk.Scale(self.main_frame, from_=0, to=100, orient='horizontal')
+        self.progress_bar = tk.Scale(self.main_frame, from_=0, to=100, orient='horizontal', command=self.on_progress_change)
         self.progress_bar.pack(fill=tk.X, pady=5)
         self.duration_label = tk.Label(self.main_frame, text="00:00/00:00")
         self.duration_label.pack(fill=tk.X, pady=5)
@@ -56,7 +58,7 @@ class MP3PlayerApp:
             self.now_playing_label.config(text="Now Playing: No song selected")
 
     def update_progress(self):
-        if self.player.is_playing:
+        if self.player.is_playing and not self.user_interacting_with_progress:
             self.update_progress_bar()
             self.update_duration_label()  # Ensure the duration label updates
         self.root.after(1000, self.update_progress)  # Update every second
@@ -77,7 +79,16 @@ class MP3PlayerApp:
         else:
             self.duration_label.config(text="00:00.00/00:00.00") 
 
-    # Methods that connect widgets to core functionality
+    def on_progress_change(self, value):
+        """Handle progress bar manipulation"""
+        self.user_interacting_with_progress = True  # Set the flag to indicate user interaction
+        pos = float(value) / 100 * self.player.song_duration
+        self.player.set_position(pos)
+        self.update_time_display(pos)
+
+    def update_time_display(self, position):
+        self.duration_label.config(text=f"{self.player.format_time(position)}/{self.player.format_time(self.player.song_duration)}")
+
     def play_pause(self):
         self.player.play_pause()
         self.update_now_playing()
