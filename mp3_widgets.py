@@ -4,10 +4,10 @@ class PlayerControls(tk.Frame):
     def __init__(self, master, player, **kwargs):
         super().__init__(master, **kwargs)
         self.player = player
-        
+
         self.play_btn = tk.Button(self, text="▶", command=self.player.play_pause)
         self.play_btn.grid(row=0, column=0, padx=5)
-        
+
         self.stop_btn = tk.Button(self, text="⏹", command=self.player.stop)
         self.stop_btn.grid(row=0, column=1, padx=5)
 
@@ -18,9 +18,12 @@ class PlayerControls(tk.Frame):
         self.next_btn.grid(row=0, column=3, padx=5)
 
         self.volume_scale = tk.Scale(self, from_=0, to=100, orient='horizontal',
-                                   command=self.player.set_volume)
+                                      command=self.player.set_volume)
         self.volume_scale.set(70)
         self.volume_scale.grid(row=0, column=4, padx=5)
+        
+        self.volume_label = tk.Label(self, text="Volume")
+        self.volume_label.grid(row=0, column=5)
 
 class PlaylistDisplay(tk.Frame):
     def __init__(self, master, player, **kwargs):
@@ -31,7 +34,7 @@ class PlaylistDisplay(tk.Frame):
         self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         
         self.listbox = tk.Listbox(self, yscrollcommand=self.scrollbar.set,
-        selectbackground='lightblue', selectmode=tk.SINGLE)
+                                  selectbackground='lightblue', selectmode=tk.SINGLE)
         self.listbox.pack(fill=tk.BOTH, expand=True)
         self.listbox.bind('<Double-1>', lambda e: self.player.play_selected())
         
@@ -42,12 +45,12 @@ class StatusDisplay(tk.Frame):
         super().__init__(master, **kwargs)
         self.player = player
         
-        self.song_label = tk.Label(self, text="No song selected",
-                                  font=('Helvetica', 10, 'bold'))
+        self.song_label = tk.Label(self, text="Now Playing: No song selected",
+                                    font=('Helvetica', 10, 'bold'))
         self.song_label.pack(fill=tk.X, pady=5)
 
         self.progress = tk.Scale(self, from_=0, to=100, orient=tk.HORIZONTAL,
-                               showvalue=0, state=tk.DISABLED)
+                                 showvalue=0, state=tk.NORMAL)
         self.progress.pack(fill=tk.X)
 
         self.time_label = tk.Label(self, text="00:00 / 00:00")
@@ -59,5 +62,29 @@ class FolderButton(tk.Frame):
         self.player = player
         
         self.load_btn = tk.Button(self, text="Load Music Folder",
-                                command=self.player.load_songs_dialog)
+                                   command=self.player.load_songs_dialog)
         self.load_btn.pack(fill=tk.X, pady=5)
+
+# Example of how to integrate all components
+class MP3Player(tk.Tk):
+    def __init__(self, player):
+        super().__init__()
+        self.title("MP3 Player")
+        
+        self.controls = PlayerControls(self, player)
+        self.controls.pack(pady=10)
+        
+        self.playlist_display = PlaylistDisplay(self, player)
+        self.playlist_display.pack(fill=tk.BOTH, expand=True, pady=10)
+        
+        self.status_display = StatusDisplay(self, player)
+        self.status_display.pack(fill=tk.X, pady=10)
+        
+        self.folder_button = FolderButton(self, player)
+        self.folder_button.pack(fill=tk.X, pady=10)
+
+if __name__ == "__main__":
+    # player is your media handling object
+    player = None  # Replace with your actual player instance
+    app = MP3Player(player)
+    app.mainloop()
