@@ -1,7 +1,6 @@
 import tkinter as tk
 from mp3_player_oop_style import MP3PlayerCore
-from mp3_widgets import PlayerControls, PlaylistDisplay, StatusDisplay, FolderButton 
-
+from mp3_widgets import PlayerControls, PlaylistDisplay, StatusDisplay, FolderButton
 class MP3PlayerApp:
     def __init__(self, root):
         self.root = root
@@ -14,35 +13,31 @@ class MP3PlayerApp:
         if self.player.playlist:
             self.update_playlist()
             self.player.current_index = 0 
-            self.update_now_playing()  # Ensure this is called only if there are songs
+            self.update_now_playing()
             self._is_playing = False
             
         print("Loaded songs:", self.player.playlist)
         
     def create_widgets(self):
-        """Create and arrange all widgets"""
         self.main_frame = tk.Frame(self.root)
         self.main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-
         self.status = StatusDisplay(self.main_frame, self)
         self.status.pack(fill=tk.X, pady=5)
-
         self.playlist_display = PlaylistDisplay(self.main_frame, self)
         self.playlist_display.pack(fill=tk.BOTH, expand=True, pady=5)
-
         self.controls = PlayerControls(self.main_frame, self)
         self.controls.pack(fill=tk.X, pady=5)
-
         self.folder_btn = FolderButton(self.main_frame, self)
         self.folder_btn.pack(fill=tk.X, pady=5)
-
         self.now_playing_label = tk.Label(self.main_frame, text="Now Playing: ")
         self.now_playing_label.pack(fill=tk.X, pady=5)
-
-        self.update_progress_bar()
+        self.progress_bar = tk.Scale(self.main_frame, from_= 0, to = 100, orient='horizontal')
+        self.progress_bar.pack(fill=tk.X, pady=5)
+        self.duration_label = tk.Label(self.main_frame, text="00:00/00:00")
+        self.duration_label.pack(fill=tk.X, pady=5)
+        self.update_progress()
 
     def update_playlist(self):
-        """Update the song list in the playlist display"""
         self.playlist_display.listbox.delete(0, tk.END)
         for song in self.player.playlist:
             self.playlist_display.listbox.insert(tk.END, song)
@@ -52,23 +47,33 @@ class MP3PlayerApp:
             self.update_now_playing()
     
     def update_now_playing(self):
-       if self.player.playlist:
-           current_song = self.player.playlist[self.player.current_index]
-           self.now_playing_label.config(text=f"Now Playing: {current_song}")
-       else:
-           self.now_playing_label.config(text="Now Playing: No song selected")
+        if self.player.playlist:
+            current_song = self.player.playlist[self.player.current_index]
+            self.now_playing_label.config(text=f"Now Playing: {current_song}")
+        else:
+            self.now_playing_label.config(text="Now Playing: No song selected")
 
+    def update_progress(self):
+        if self.player.is_playing:
+            self.update_progress_bar()
+            self.update_duration_label()  # Ensure the duration label updates
+        self.root.after(1000, self.update_progress)
+    
     def update_progress_bar(self):
-        if self.player.is_playing and self.player.current_song:  # Ensure a song is selected
-            position = self.player.get_position()
-            duration = self.player.get_duration()
-            
-            # Prevent division by zero
-            if duration > 0:
-                self.controls.progress_bar.set(position / duration * 100)
-                self.controls.time_label.config(text=f"{position // 60}:{position % 60:02d} / {duration // 60}:{duration % 60:02d}")
-        self.root.after(1000, self.update_progress_bar) 
+        current_position = self.player.get_position()  # Get the current position in seconds
+        duration = self.player.get_duration()  # Total duration in seconds
+    
+        if duration > 0:
+            progress = (current_position / duration) * 100
+            self.progress_bar.set(progress)
 
+    def update_duration_label(self):
+        if self.player.is_playing:
+            current_position = self.player.get_position()
+            duration = self.player.get_duration()
+            self.duration_label.config(text=f"{self.player.format_time(current_position)}/{self.player.format_time(duration)}")
+        else:
+            self.duration_label.config(text="00:00/00:00")
 
     # Methods that connect widgets to core functionality
     def play_pause(self):
@@ -98,6 +103,7 @@ class MP3PlayerApp:
             self.player.current_index = selection[0]
             self.player.play_song(self.player.playlist[self.player.current_index])
             self.update_now_playing()
+            self.update_progress
 
     def load_songs_dialog(self):
        """Open a dialog to load new songs into the playlist"""
@@ -106,6 +112,8 @@ class MP3PlayerApp:
                self.update_playlist()
        except Exception as e:
            self.status.show_error(f"Error loading songs: {str(e)}")  # Assuming a method for displaying errors
+    
+    
    
 
 if __name__ == "__main__":

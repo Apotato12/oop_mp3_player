@@ -32,6 +32,11 @@ class MP3PlayerCore:
     def play_song(self, song):
         if song:
             print(f"Playing: {song}")
+            full_path = os.path.join(self.music_directory, song)
+            mixer.music.load(full_path)
+            mixer.music.play()
+            self.is_playing = True
+            self.paused = False
 
     def play_selected(self):
         if 0 <= self.current_index < len(self.playlist):
@@ -58,13 +63,7 @@ class MP3PlayerCore:
 
     def play(self):
         if self.current_song:
-            full_path = os.path.join(self.music_directory, self.current_song)
-            mixer.music.load(full_path)
-            mixer.music.set_volume(0.5)
-            mixer.music.play()
-            self.is_playing = True
-            self.paused = False
-            print(f"Playing: {self.current_song}")
+            self.play_song(self.current_song)
 
     def stop(self):
         mixer.music.stop()
@@ -110,7 +109,7 @@ class MP3PlayerCore:
         return mixer.music.get_pos() / 1000
 
     def get_duration(self):
-        return mixer.Sound(os.path.join(self.music_directory, self.current_song)).get_length()
+        return mixer.Sound(os.path.join(self.music_directory, self.current_song)).get_length() if self.current_song else 0
 
 
 class MP3PlayerGUI:
@@ -119,7 +118,7 @@ class MP3PlayerGUI:
         self.player = MP3PlayerCore()
 
         # Now Playing Label
-        self.now_playing_label = Label(master, text="Now Playing: ")
+        self.now_playing_label = Label(master, text="Now Playing: No song selected")
         self.now_playing_label.pack(pady=10)
         
         # Progress Bar
@@ -164,6 +163,11 @@ class MP3PlayerGUI:
             new_position = (value / 100) * duration
             mixer.music.set_pos(new_position)
 
+    def show_duration(self):
+        duration = self.player.get_duration()
+        current_position = self.player.get_position()
+        print(f"Current Time: {current_position:.2f}s / Duration: {duration:.2f}s")
+
     def update_ui(self):
         if self.player.is_playing:
             current_position = self.player.get_position()
@@ -171,6 +175,7 @@ class MP3PlayerGUI:
             self.progress_var.set((current_position / duration) * 100 if duration > 0 else 0)
 
             self.update_now_playing()
+            self.show_duration()
         
         self.master.after(1000, self.update_ui)
 

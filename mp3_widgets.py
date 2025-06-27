@@ -24,7 +24,7 @@ class PlayerControls(tk.Frame):
         
         self.volume_label = tk.Label(self, text="Volume")
         self.volume_label.grid(row=0, column=5)
-
+    
 class PlaylistDisplay(tk.Frame):
     def __init__(self, master, player, **kwargs):
         super().__init__(master, **kwargs)
@@ -45,9 +45,9 @@ class StatusDisplay(tk.Frame):
         super().__init__(master, **kwargs)
         self.player = player
         
-        # Removed the progress scale
-        self.time_label = tk.Label(self, text="00:00 / 00:00")
-        self.time_label.pack(fill=tk.X)
+
+    def update_time(self, value):
+        pass
 
 class FolderButton(tk.Frame):
     def __init__(self, master, player, **kwargs):
@@ -76,9 +76,11 @@ class MP3Player(tk.Tk):
         self.folder_button = FolderButton(self, player)
         self.folder_button.pack(fill=tk.X, pady=10)
 
+
+
 if __name__ == "__main__":
     # player is your media handling object
     player = None  # Replace with your actual player instance
     app = MP3Player(player)
-
+    app.player.play_song(app.player.playlist[0])
     app.mainloop()
