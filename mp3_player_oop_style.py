@@ -1,4 +1,3 @@
-import tkinter as tk
 import pygame
 import os
 from tkinter import *
@@ -43,3 +42,19 @@ class MP3PlayerCore:
         elif self.playing:
             mixer.music.pause()
             self.paused = True
+    def play(self):
+        """Play the current song"""
+        if self.current_song:
+            mixer.music.load(self.current_song)
+            mixer.music.play()
+            self.playing = True
+            self.paused = False
+    def stop(self):
+        """Stop playback"""
+        mixer.music.stop()
+        self.playing = False
+        self.paused = False
+    def next_song(self):
+        """Play the next song in playlist"""
+        if not self.playlist:
+            return
