@@ -45,14 +45,7 @@ class StatusDisplay(tk.Frame):
         super().__init__(master, **kwargs)
         self.player = player
         
-        self.song_label = tk.Label(self, text="Now Playing: No song selected",
-                                    font=('Helvetica', 10, 'bold'))
-        self.song_label.pack(fill=tk.X, pady=5)
-
-        self.progress = tk.Scale(self, from_=0, to=100, orient=tk.HORIZONTAL,
-                                 showvalue=0, state=tk.NORMAL)
-        self.progress.pack(fill=tk.X)
-
+        # Removed the progress scale
         self.time_label = tk.Label(self, text="00:00 / 00:00")
         self.time_label.pack(fill=tk.X)
 
@@ -69,8 +62,8 @@ class FolderButton(tk.Frame):
 class MP3Player(tk.Tk):
     def __init__(self, player):
         super().__init__()
-        self.title("MP3 Player")
         
+        # Removed the title
         self.controls = PlayerControls(self, player)
         self.controls.pack(pady=10)
         
@@ -87,4 +80,5 @@ if __name__ == "__main__":
     # player is your media handling object
     player = None  # Replace with your actual player instance
     app = MP3Player(player)
+
     app.mainloop()
