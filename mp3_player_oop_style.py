@@ -58,3 +58,32 @@ class MP3PlayerCore:
         """Play the next song in playlist"""
         if not self.playlist:
             return
+    
+        self.current_index = (self.current_index + 1) % len(self.playlist)
+        self.current_song = self.playlist[self.current_index]
+        self.stop()
+        self.play()
+    def prev_song(self):
+        """Play the previous song in playlist"""
+        if not self.playlist:
+            return
+            
+        self.current_index = (self.current_index - 1) % len(self.playlist)
+        self.current_song = self.playlist[self.current_index]
+        self.stop()
+        self.play()
+
+    def set_volume(self, value):
+        """Set volume level (0-100)"""
+        volume = float(value) / 100
+        mixer.music.set_volume(volume)
+    def get_current_song_name(self):
+        """Return the name of the current song."""
+        return os.path.basename(self.current_song) if self.current_song else "No song selected"
+    def load_songs_dialog(self):
+        """Open folder dialog to load music"""
+        from tkinter import filedialog
+        directory = filedialog.askdirectory(initialdir=self.music_directory)
+        if directory:
+            return self.load_songs(directory)
+        return False
