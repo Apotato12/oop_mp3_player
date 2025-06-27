@@ -40,7 +40,7 @@ class MP3PlayerCore:
 
     def play_selected(self):
         if 0 <= self.current_index < len(self.playlist):
-            self.play_song(self.playlist[self.current_index]) 
+            self.play_song(self.playlist[self.current_index])
 
     def play_pause(self):
         if not self.current_song and self.playlist:
@@ -110,12 +110,23 @@ class MP3PlayerCore:
 
     def get_duration(self):
         return mixer.Sound(os.path.join(self.music_directory, self.current_song)).get_length() if self.current_song else 0
+    
+    def format_time(self, seconds):
+        minutes = int(seconds // 60)
+        seconds = int(seconds % 60)
+        milliseconds = int((seconds - int(seconds)) * 1000)
+        return f"{minutes:02}:{seconds:02}.{milliseconds:03}"
 
 
 class MP3PlayerGUI:
     def __init__(self, master):
         self.master = master
         self.player = MP3PlayerCore()
+        self.current_time_label = Label(master, text="00:00.000")
+        self.current_time_label.pack()
+        self.total_time_label = Label(master, text="00:00.000")
+        self.total_time_label.pack()
+        self.desired_position = None
 
         # Now Playing Label
         self.now_playing_label = Label(master, text="Now Playing: No song selected")
@@ -163,22 +174,27 @@ class MP3PlayerGUI:
             new_position = (value / 100) * duration
             mixer.music.set_pos(new_position)
 
-    def show_duration(self):
-        duration = self.player.get_duration()
-        current_position = self.player.get_position()
-        print(f"Current Time: {current_position:.2f}s / Duration: {duration:.2f}s")
-
     def update_ui(self):
         if self.player.is_playing:
             current_position = self.player.get_position()
             duration = self.player.get_duration()
-            self.progress_var.set((current_position / duration) * 100 if duration > 0 else 0)
-
+            
+            # Update progress only if song is playing and within its duration
+            if duration > 0:
+                # Set current position to progress if the song is still playing
+                self.progress_var.set(min((current_position / duration) * 100, 100))
+            
+            self.current_time_label.config(text=self.player.format_time(current_position))
+            self.total_time_label.config(text=self.player.format_time(duration))
             self.update_now_playing()
-            self.show_duration()
-        
-        self.master.after(1000, self.update_ui)
-
+            # Update the player position every second
+            if self.desired_position is not None and abs(current_position - self.desired_position) > 0.1:
+                mixer.music.set_pos(self.desired_position)
+                print(f'Setting position to: {self.desired_position}')
+                self.desired_position = None  # reset desired position after seeking
+            if current_position >= duration:
+                self.player.next_song()
+        self.master.after(100, self.update_ui)
 
 if __name__ == "__main__":
     root = Tk()

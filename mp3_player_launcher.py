@@ -73,7 +73,7 @@ class MP3PlayerApp:
             duration = self.player.get_duration()
             self.duration_label.config(text=f"{self.player.format_time(current_position)}/{self.player.format_time(duration)}")
         else:
-            self.duration_label.config(text="00:00/00:00")
+            self.duration_label.config(text="00:00.00/00:00.00") 
 
     # Methods that connect widgets to core functionality
     def play_pause(self):
