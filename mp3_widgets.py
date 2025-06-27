@@ -1,6 +1,4 @@
-from mp3_player_oop_style import pygame , tkinter as tk  , os
-from tkinter import ttk, filedialog, messagebox
-from pygame import mixer
+import tkinter as tk
 
 class PlayerControls(tk.Frame):
     def __init__(self, master, player, **kwargs):
