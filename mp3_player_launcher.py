@@ -1,6 +1,8 @@
 import tkinter as tk
+from threading import Thread
 from mp3_player_oop_style import MP3PlayerCore
 from mp3_widgets import PlayerControls, PlaylistDisplay, StatusDisplay, FolderButton
+
 class MP3PlayerApp:
     def __init__(self, root):
         self.root = root
@@ -31,7 +33,7 @@ class MP3PlayerApp:
         self.folder_btn.pack(fill=tk.X, pady=5)
         self.now_playing_label = tk.Label(self.main_frame, text="Now Playing: ")
         self.now_playing_label.pack(fill=tk.X, pady=5)
-        self.progress_bar = tk.Scale(self.main_frame, from_= 0, to = 100, orient='horizontal')
+        self.progress_bar = tk.Scale(self.main_frame, from_=0, to=100, orient='horizontal')
         self.progress_bar.pack(fill=tk.X, pady=5)
         self.duration_label = tk.Label(self.main_frame, text="00:00/00:00")
         self.duration_label.pack(fill=tk.X, pady=5)
@@ -57,7 +59,7 @@ class MP3PlayerApp:
         if self.player.is_playing:
             self.update_progress_bar()
             self.update_duration_label()  # Ensure the duration label updates
-        self.root.after(1000, self.update_progress)
+        self.root.after(1000, self.update_progress)  # Update every second
     
     def update_progress_bar(self):
         current_position = self.player.get_position()  # Get the current position in seconds
@@ -103,7 +105,7 @@ class MP3PlayerApp:
             self.player.current_index = selection[0]
             self.player.play_song(self.player.playlist[self.player.current_index])
             self.update_now_playing()
-            self.update_progress
+            self.update_progress()
 
     def load_songs_dialog(self):
        """Open a dialog to load new songs into the playlist"""
@@ -112,9 +114,6 @@ class MP3PlayerApp:
                self.update_playlist()
        except Exception as e:
            self.status.show_error(f"Error loading songs: {str(e)}")  # Assuming a method for displaying errors
-    
-    
-   
 
 if __name__ == "__main__":
     root = tk.Tk()

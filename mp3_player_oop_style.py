@@ -3,6 +3,7 @@ import os
 from tkinter import *
 from tkinter import filedialog
 from pygame import mixer
+import threading
 
 class MP3PlayerCore:
     def __init__(self):
@@ -14,6 +15,8 @@ class MP3PlayerCore:
         self.playlist = []
         self.current_index = 0
         self.music_directory = os.path.expanduser('~/Music')
+        self.seek_position = 0  # Stores last known position
+        self.song_duration = 0  # Cache song duration
 
     def load_songs(self, directory):
         self.music_directory = directory
@@ -25,18 +28,19 @@ class MP3PlayerCore:
         if self.playlist:
             self.current_index = 0
             self.current_song = self.playlist[self.current_index]
+            self.song_duration = mixer.Sound(os.path.join(directory, self.current_song)).get_length()
             return True
         self.current_song = None
         return False
 
     def play_song(self, song):
         if song:
-            print(f"Playing: {song}")
             full_path = os.path.join(self.music_directory, song)
             mixer.music.load(full_path)
             mixer.music.play()
             self.is_playing = True
             self.paused = False
+            self.song_duration = mixer.Sound(full_path).get_length()
 
     def play_selected(self):
         if 0 <= self.current_index < len(self.playlist):
@@ -51,13 +55,11 @@ class MP3PlayerCore:
             self.paused = True
             mixer.music.pause()
             self.is_playing = False
-            print(f"Paused: {self.current_song}")
         else:
             if self.paused:
                 mixer.music.unpause()
                 self.is_playing = True
                 self.paused = False
-                print(f"Resumed: {self.current_song}")
             else:
                 self.play()  # Play from the start
 
@@ -70,7 +72,6 @@ class MP3PlayerCore:
         self.is_playing = False
         self.paused = False
         self.current_song = None
-        print("Playback stopped")
 
     def next_song(self):
         if not self.playlist:
@@ -90,7 +91,6 @@ class MP3PlayerCore:
 
     def set_volume(self, value):
         volume = max(0, min(float(value) / 100, 1))
-        print(f'Setting volume to: {volume}')
         try:
             mixer.music.set_volume(volume)
         except Exception as e:
@@ -109,92 +109,101 @@ class MP3PlayerCore:
         return mixer.music.get_pos() / 1000
 
     def get_duration(self):
-        return mixer.Sound(os.path.join(self.music_directory, self.current_song)).get_length() if self.current_song else 0
-    
+        return self.song_duration if self.current_song else 0
+
     def format_time(self, seconds):
         minutes = int(seconds // 60)
         seconds = int(seconds % 60)
         milliseconds = int((seconds - int(seconds)) * 1000)
         return f"{minutes:02}:{seconds:02}.{milliseconds:03}"
 
+    def set_position(self, position):
+        """Set the playback position without affecting audio quality"""
+        try:
+            mixer.music.set_pos(position)
+        except Exception as e:
+            print(f"Error seeking: {e}")
 
 class MP3PlayerGUI:
     def __init__(self, master):
         self.master = master
         self.player = MP3PlayerCore()
+        
+        # UI Setup
         self.current_time_label = Label(master, text="00:00.000")
         self.current_time_label.pack()
         self.total_time_label = Label(master, text="00:00.000")
         self.total_time_label.pack()
-        self.desired_position = None
-
-        # Now Playing Label
+        
         self.now_playing_label = Label(master, text="Now Playing: No song selected")
         self.now_playing_label.pack(pady=10)
         
-        # Progress Bar
         self.progress_var = DoubleVar()
-        self.progress_bar = Scale(master, from_=0, to=100, variable=self.progress_var, orient=HORIZONTAL, command=self.set_position)
+        self.progress_bar = Scale(master, from_=0, to=100, orient=HORIZONTAL, 
+                                command=self.on_progress_change)
         self.progress_bar.pack(fill=X)
         
-        # Play/Pause Button
-        self.play_button = Button(master, text="Play/Pause", command=self.player.play_pause)
-        self.play_button.pack()
+        control_frame = Frame(master)
+        control_frame.pack(pady=10)
         
-        # Stop Button
-        self.stop_button = Button(master, text="Stop", command=self.player.stop)
-        self.stop_button.pack()
+        self.play_button = Button(control_frame, text="Play/Pause", command=self.play_pause)
+        self.play_button.pack(side=LEFT, padx=5)
         
-        # Next Button
-        self.next_button = Button(master, text="Next", command=self.player.next_song)
-        self.next_button.pack()
+        self.stop_button = Button(control_frame, text="Stop", command=self.stop)
+        self.stop_button.pack(side=LEFT, padx=5)
         
-        # Previous Button
-        self.prev_button = Button(master, text="Previous", command=self.player.prev_song)
-        self.prev_button.pack()
+        self.prev_button = Button(control_frame, text="Previous", command=self.prev_song)
+        self.prev_button.pack(side=LEFT, padx=5)
         
-        # Load Music Folder Button
+        self.next_button = Button(control_frame, text="Next", command=self.next_song)
+        self.next_button.pack(side=LEFT, padx=5)
+        
         self.load_button = Button(master, text="Load Music Folder", command=self.load_music_folder)
-        self.load_button.pack()
+        self.load_button.pack(pady=10)
         
         self.update_ui()
 
-    def load_music_folder(self):
-        if self.player.load_songs_dialog():
-            self.update_now_playing()
-    
-    def update_now_playing(self):
-        song_name = self.player.get_current_song_name()
-        self.now_playing_label.config(text=f"Now Playing: {song_name}")
+    def on_progress_change(self, value):
+        """Handle progress bar manipulation"""
+        pos = float(value) / 100 * self.player.song_duration
+        self.player.set_position(pos)
+        self.update_time_display(pos)
 
-    def set_position(self, value):
-        value = int(value)
-        duration = self.player.get_duration()
-        if duration > 0:
-            new_position = (value / 100) * duration
-            mixer.music.set_pos(new_position)
+    def update_time_display(self, position):
+        self.current_time_label.config(text=self.player.format_time(position))
+        self.total_time_label.config(text=self.player.format_time(self.player.song_duration))
 
     def update_ui(self):
+        """Update the UI less frequently to reduce interference"""
         if self.player.is_playing:
-            current_position = self.player.get_position()
-            duration = self.player.get_duration()
-            
-            # Update progress only if song is playing and within its duration
-            if duration > 0:
-                # Set current position to progress if the song is still playing
-                self.progress_var.set(min((current_position / duration) * 100, 100))
-            
-            self.current_time_label.config(text=self.player.format_time(current_position))
-            self.total_time_label.config(text=self.player.format_time(duration))
-            self.update_now_playing()
-            # Update the player position every second
-            if self.desired_position is not None and abs(current_position - self.desired_position) > 0.1:
-                mixer.music.set_pos(self.desired_position)
-                print(f'Setting position to: {self.desired_position}')
-                self.desired_position = None  # reset desired position after seeking
-            if current_position >= duration:
-                self.player.next_song()
-        self.master.after(100, self.update_ui)
+            pos = self.player.get_position()
+            self.progress_bar.set(min((pos / self.player.song_duration) * 100, 100))
+            self.update_time_display(pos)
+            self.now_playing_label.config(text=f"Now Playing: {self.player.get_current_song_name()}")
+        
+        self.master.after(100, self.update_ui)  # Reduced UI update frequency
+
+    def load_music_folder(self):
+        if self.player.load_songs_dialog():
+            self.now_playing_label.config(text=f"Now Playing: {self.player.get_current_song_name()}")
+            self.progress_bar.set(0)
+            self.update_time_display(0)
+
+    def play_pause(self):
+        self.player.play_pause()
+        self.update_ui()
+
+    def stop(self):
+        self.player.stop()
+        self.update_ui()
+
+    def next_song(self):
+        self.player.next_song()
+        self.update_ui()
+
+    def prev_song(self):
+        self.player.prev_song()
+        self.update_ui()
 
 if __name__ == "__main__":
     root = Tk()
