@@ -1,10 +1,12 @@
 import tkinter as tk
 
+# Encapsulation: The PlayerControls class encapsulates the controls for the MP3 player.
 class PlayerControls(tk.Frame):
     def __init__(self, master, player, **kwargs):
         super().__init__(master, **kwargs)
-        self.player = player
+        self.player = player  # Store a reference to the player
 
+        # Create control buttons
         self.play_btn = tk.Button(self, text="▶", command=self.player.play_pause)
         self.play_btn.grid(row=0, column=0, padx=5)
 
@@ -17,18 +19,20 @@ class PlayerControls(tk.Frame):
         self.next_btn = tk.Button(self, text="⏭", command=self.player.next_song)
         self.next_btn.grid(row=0, column=3, padx=5)
 
+        # Volume control
         self.volume_scale = tk.Scale(self, from_=0, to=100, orient='horizontal',
                                       command=self.player.set_volume)
-        self.volume_scale.set(70)
+        self.volume_scale.set(70)  # Default volume
         self.volume_scale.grid(row=0, column=4, padx=5)
         
         self.volume_label = tk.Label(self, text="Volume")
         self.volume_label.grid(row=0, column=5)
-    
+
+# Encapsulation: The PlaylistDisplay class encapsulates the display of the playlist.
 class PlaylistDisplay(tk.Frame):
     def __init__(self, master, player, **kwargs):
         super().__init__(master, **kwargs)
-        self.player = player
+        self.player = player  # Store a reference to the player
         
         self.scrollbar = tk.Scrollbar(self)
         self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
@@ -40,47 +44,47 @@ class PlaylistDisplay(tk.Frame):
         
         self.scrollbar.config(command=self.listbox.yview)
 
+# Encapsulation: The StatusDisplay class is intended to show the status of the player.
 class StatusDisplay(tk.Frame):
     def __init__(self, master, player, **kwargs):
         super().__init__(master, **kwargs)
-        self.player = player
-        
+        self.player = player  # Store a reference to the player
 
     def update_time(self, value):
-        pass
+        pass  # Placeholder for future implementation
 
+# Encapsulation: The FolderButton class encapsulates the functionality to load a music folder.
 class FolderButton(tk.Frame):
     def __init__(self, master, player, **kwargs):
         super().__init__(master, **kwargs)
-        self.player = player
+        self.player = player  # Store a reference to the player
         
         self.load_btn = tk.Button(self, text="Load Music Folder",
                                    command=self.player.load_songs_dialog)
         self.load_btn.pack(fill=tk.X, pady=5)
 
 # Example of how to integrate all components
+# Inheritance: The MP3Player class inherits from tk.Tk, making it a specialized version of a Tkinter window.
 class MP3Player(tk.Tk):
     def __init__(self, player):
         super().__init__()
         
         # Removed the title
-        self.controls = PlayerControls(self, player)
+        self.controls = PlayerControls(self, player)  # Create player controls
         self.controls.pack(pady=10)
         
-        self.playlist_display = PlaylistDisplay(self, player)
+        self.playlist_display = PlaylistDisplay(self, player)  # Create playlist display
         self.playlist_display.pack(fill=tk.BOTH, expand=True, pady=10)
         
-        self.status_display = StatusDisplay(self, player)
+        self.status_display = StatusDisplay(self, player)  # Create status display
         self.status_display.pack(fill=tk.X, pady=10)
         
-        self.folder_button = FolderButton(self, player)
+        self.folder_button = FolderButton(self, player)  # Create folder button
         self.folder_button.pack(fill=tk.X, pady=10)
-
-
 
 if __name__ == "__main__":
     # player is your media handling object
     player = None  # Replace with your actual player instance
-    app = MP3Player(player)
-    app.player.play_song(app.player.playlist[0])
-    app.mainloop()
+    app = MP3Player(player)  # Create the MP3 player application
+    app.player.play_song(app.player.playlist[0])  # Play the first song in the playlist
+    app.mainloop()  # Start the Tkinter main loop
