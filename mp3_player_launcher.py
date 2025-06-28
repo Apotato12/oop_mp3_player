@@ -2,6 +2,7 @@ import tkinter as tk
 from mp3_player_oop_style import MP3PlayerCore
 from mp3_widgets import PlaylistDisplay, StatusDisplay, FolderButton
 
+# Base class for all control buttons
 class BaseControl(tk.Button):
     def __init__(self, master, player, app, text, **kwargs):  # Add app parameter
         super().__init__(master, text=text, **kwargs)
@@ -9,32 +10,37 @@ class BaseControl(tk.Button):
         self.app = app  # Store app reference
 
     def perform_action(self):
-        raise NotImplementedError("Subclasses should implement this!")
+        raise NotImplementedError("Subclasses should implement this!")  # Abstraction
 
+# Play button control
 class PlayControl(BaseControl):
     def perform_action(self):
         self.player.play_pause()  # Now access player directly
 
+# Stop button control
 class StopControl(BaseControl):
     def perform_action(self):
         self.player.stop()
 
+# Previous button control
 class PrevControl(BaseControl):
     def perform_action(self):
         self.player.prev_song()
         self.app.update_now_playing()  # Call update_now_playing from app
 
+# Next button control
 class NextControl(BaseControl):
     def perform_action(self):
         self.player.next_song()
         self.app.update_now_playing()  # Call update_now_playing from app
 
+# Main application class for the MP3 player
 class MP3PlayerApp:
     def __init__(self, root):
         self.root = root
         self.root.title("MP3 Player OOP Style")
         self.root.geometry("600x500")
-        self.player = MP3PlayerCore()
+        self.player = MP3PlayerCore()  # Encapsulation: Player functionality is encapsulated in MP3PlayerCore
         self.player.load_songs(self.player.music_directory)
         
         if self.player.playlist:
