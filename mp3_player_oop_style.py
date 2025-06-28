@@ -96,7 +96,6 @@ class MP3PlayerCore:
         self.is_playing = True
         self.paused = False
 
-
     def set_volume(self, value):
         volume = max(0, min(float(value) / 100, 1))
         try:
@@ -135,7 +134,7 @@ class MP3PlayerCore:
 class MP3PlayerGUI:
     def __init__(self, master):
         self.master = master
-        self.player = MP3PlayerCore()
+        self.player = MP3PlayerCore()  # Encapsulation
         
         # UI Setup
         self.current_time_label = Label(master, text="00:00.000")
