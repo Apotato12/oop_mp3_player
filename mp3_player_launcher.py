@@ -1,30 +1,33 @@
 import tkinter as tk
 from mp3_player_oop_style import MP3PlayerCore
-from mp3_widgets import  PlaylistDisplay, StatusDisplay, FolderButton
+from mp3_widgets import PlaylistDisplay, StatusDisplay, FolderButton
 
 class BaseControl(tk.Button):
-    def __init__(self, master, text, **kwargs):
+    def __init__(self, master, player, app, text, **kwargs):  # Add app parameter
         super().__init__(master, text=text, **kwargs)
+        self.player = player  # Store player reference
+        self.app = app  # Store app reference
 
     def perform_action(self):
-        """This method can be overridden in subclasses."""
         raise NotImplementedError("Subclasses should implement this!")
 
 class PlayControl(BaseControl):
     def perform_action(self):
-        self.master.MP3PlayerCore.play_pause()
+        self.player.play_pause()  # Now access player directly
 
 class StopControl(BaseControl):
     def perform_action(self):
-        self.master.player.stop()
+        self.player.stop()
 
 class PrevControl(BaseControl):
     def perform_action(self):
-        self.master.player.prev_song()
+        self.player.prev_song()
+        self.app.update_now_playing()  # Call update_now_playing from app
 
 class NextControl(BaseControl):
     def perform_action(self):
-        self.master.player.next_song()
+        self.player.next_song()
+        self.app.update_now_playing()  # Call update_now_playing from app
 
 class MP3PlayerApp:
     def __init__(self, root):
@@ -33,7 +36,6 @@ class MP3PlayerApp:
         self.root.geometry("600x500")
         self.player = MP3PlayerCore()
         self.player.load_songs(self.player.music_directory)
-        player = None
         
         if self.player.playlist:
             self.update_playlist()
@@ -54,23 +56,23 @@ class MP3PlayerApp:
         self.playlist_display = PlaylistDisplay(self.main_frame, self)
         self.playlist_display.pack(fill=tk.BOTH, expand=True, pady=5)
 
-    # Use polymorphic controls
+        # Use polymorphic controls
         self.controls_frame = tk.Frame(self.main_frame)
         self.controls_frame.pack(fill=tk.X, pady=5)
 
-    # Create buttons with main_frame as the master
-        self.play_btn = PlayControl(self.controls_frame, text="▶")  # Change here
-        self.stop_btn = StopControl(self.controls_frame, text="⏹")  # Change here
-        self.prev_btn = PrevControl(self.controls_frame, text="⏮")  # Change here
-        self.next_btn = NextControl(self.controls_frame, text="⏭")  # Change here
+        # Create buttons with player reference and app reference
+        self.play_btn = PlayControl(self.controls_frame, self.player, self, text="▶")
+        self.stop_btn = StopControl(self.controls_frame, self.player, self, text="⏹")
+        self.prev_btn = PrevControl(self.controls_frame, self.player, self, text="⏮")
+        self.next_btn = NextControl(self.controls_frame, self.player, self, text="⏭")
 
-    # Now set the command for each button
+        # Set commands
         self.play_btn.config(command=self.play_btn.perform_action)
         self.stop_btn.config(command=self.stop_btn.perform_action)
         self.prev_btn.config(command=self.prev_btn.perform_action)
         self.next_btn.config(command=self.next_btn.perform_action)
 
-    # Pack the buttons
+        # Pack the buttons
         self.play_btn.pack(side=tk.LEFT, padx=5)
         self.stop_btn.pack(side=tk.LEFT, padx=5)
         self.prev_btn.pack(side=tk.LEFT, padx=5)
@@ -83,18 +85,16 @@ class MP3PlayerApp:
     
         self.progress_var = tk.DoubleVar()
         self.progress_bar = tk.Scale(self.main_frame, from_=0, to=100, orient='horizontal',
-                                  variable=self.progress_var, command=self.on_progress_change)
+                                      variable=self.progress_var, command=self.on_progress_change)
         self.progress_bar.pack(fill=tk.X, pady=5)
     
-    # Bind events for drag start and end
+        # Bind events for drag start and end
         self.progress_bar.bind("<ButtonPress-1>", self.on_progress_press)
         self.progress_bar.bind("<ButtonRelease-1>", self.on_progress_release)
     
         self.duration_label = tk.Label(self.main_frame, text="00:00/00:00")
         self.duration_label.pack(fill=tk.X, pady=5)
         self.update_progress()
-
-
 
     def update_playlist(self):
         self.playlist_display.listbox.delete(0, tk.END)
@@ -200,7 +200,6 @@ class MP3PlayerApp:
            self.status.show_error(f"Error loading songs: {str(e)}")  
 
 if __name__ == "__main__":
-    player = MP3PlayerCore()
     root = tk.Tk()
     app = MP3PlayerApp(root)
     root.mainloop()

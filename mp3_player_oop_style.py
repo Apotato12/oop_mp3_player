@@ -14,8 +14,8 @@ class MP3PlayerCore:
         self.playlist = []
         self.current_index = 0
         self.music_directory = os.path.expanduser('~/Music')
-        self.seek_position = 0  # Stores last known position
-        self.song_duration = 0  # Cache song duration
+        self.seek_position = 0 
+        self.song_duration = 0
 
     def load_songs(self, directory):
         self.music_directory = directory
@@ -75,18 +75,27 @@ class MP3PlayerCore:
     def next_song(self):
         if not self.playlist:
             return
+            
         self.current_index = (self.current_index + 1) % len(self.playlist)
         self.current_song = self.playlist[self.current_index]
-        self.stop()
-        self.play()
-
-    def prev_song(self):
+        mixer.music.stop()
+        mixer.music.load(os.path.join(self.music_directory, self.current_song))
+        mixer.music.play()
+        self.is_playing = True
+        self.paused = False
+        
+    def prev_song(self): 
         if not self.playlist:
             return
+            
         self.current_index = (self.current_index - 1) % len(self.playlist)
-        self.current_song = self.playlist[self.current_index]
-        self.stop()
-        self.play()
+        self.current_song = self.playlist[self.current_index]  
+        mixer.music.stop()
+        mixer.music.load(os.path.join(self.music_directory, self.current_song))
+        mixer.music.play()
+        self.is_playing = True
+        self.paused = False
+
 
     def set_volume(self, value):
         volume = max(0, min(float(value) / 100, 1))
